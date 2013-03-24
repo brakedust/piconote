@@ -49,10 +49,17 @@ class Note(Base):
     
     def __str__(self):
         
-        return "-"*80 + "\n[Author:{c}][Created:{d}]\nTags:{tags}\n{t}".format(c=self.Creator,
-                                      d = self.CreateDate,
-                                      tags = ",".join([t.TagName for t in self.Tags]),
-                                      t = self.Text)
+        return "-"*80 + """
+ID      : {id}
+Author  : {c}
+Created : {d}
+Tags    : {tags}
+--TEXT--
+{t}""".format(c=self.Creator,
+              d = self.CreateDate,
+              tags = ",".join([t.TagName for t in self.Tags]),
+              t = self.Text,
+              id = self.NoteID)
     #def __repr__(self):
     #    return "Note(Text={0},NoteID={1},When={2},User={3})".format(repr(self.Text), 
     #                                                                  repr(self.NoteID), 

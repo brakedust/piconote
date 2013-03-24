@@ -48,9 +48,10 @@ def run(inargs):
         if args.text is not None:
             mynotes = find_text_in_note(args.text)
                 
-        if len(args.tags) > 0:
+        if args.tags is not None:
             mynotes = find_by_tag(args.tags[0])
         
+        print('Search found {n} note(s).'.format(n=len(mynotes)))
         for note in mynotes:
             print(str(note))
             
