@@ -1,20 +1,15 @@
+# -*- coding: utf-8 -*-
+
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..'))
 from sqlalchemy import (Integer, String, CHAR, Float, Column, ForeignKey, 
-                        create_engine, DateTime, MetaData,VARCHAR, VARBINARY)
+                        create_engine, DateTime)
 from sqlalchemy.orm import  relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.types import TypeDecorator
-from sqlalchemy.dialects.postgresql import UUID as pgUUID
 
 from datetime import datetime
-import uuid
-import json
-import os
 
-
-
-
+from mininote.dbtypes import GUID
 
 # create a configured "Session" class
 
@@ -22,62 +17,6 @@ Base = declarative_base()
 
 Now = lambda : datetime.now()
 
-class GUID(TypeDecorator):
-    """Platform-independent GUID type.
-
-    Uses Postgresql's UUID type, otherwise uses
-    CHAR(32), storing as stringified hex values.
-
-    """
-    impl = CHAR
-
-    def load_dialect_impl(self, dialect):
-        if dialect.name == 'postgresql':
-            return dialect.type_descriptor(pgUUID)
-        else: 
-            return dialect.type_descriptor(CHAR(32))
-
-    def process_bind_param(self, value, dialect):
-        if value is None:
-            return value
-        elif dialect.name == 'postgresql':
-            return str(value)
-        else:
-            if not isinstance(value, uuid.UUID):
-                return "%.32x" % uuid.UUID(value)
-            else:
-                # hexstring
-                return "%.32x" % value
-
-    def process_result_value(self, value, dialect):
-        if value is None:
-            return value
-        else:
-            return uuid.UUID(value)
-
-class JSONDict(TypeDecorator):
-    """Represents an immutable structure as a json-encoded string.
-
-    Usage::
-
-        JSONEncodedDict(255)
-
-    """
-
-    impl = VARCHAR
-
-    def process_bind_param(self, value, dialect):
-        if value is not None:
-            value = json.dumps(value)
-
-        return value
-
-    def process_result_value(self, value, dialect):
-        if value is not None:
-            value = json.loads(value)
-        return value
-            
-            
             
 class Note(Base):
     
@@ -98,7 +37,7 @@ class Note(Base):
     #def __init__(self, text = None, note_id = None, when = None, user = None):
     def __init__(self, **kwargs):
         
-        self.NoteID = kwargs.get('NoteID',uuid.uuid4())
+        self.NoteID = kwargs.get('NoteID',GUID.new_uuid())
         self.CreateDate = kwargs.get('CreateDate',Now())
         self.ModifyDate = kwargs.get('ModifyDate',Now())
         super(Note,self).__init__(**kwargs)
@@ -122,7 +61,7 @@ class User(Base):
     CreatedNotes = relationship('Note', primaryjoin = UserID == Note.CreatorID)
 
     def __init__(self, **kwargs):
-        self.UserID = kwargs.get('UserID',uuid.uuid4())
+        self.UserID = kwargs.get('UserID',GUID.new_uuid())
         super(User,self).__init__(**kwargs)
 
     def __repr__(self):
@@ -152,7 +91,7 @@ class Tag(Base):
     Notes = relationship('Note', secondary = TagLink.__table__)
 
     def __init__(self, **kwargs):
-        self.TagID = kwargs.get('TagID',uuid.uuid4())
+        self.TagID = kwargs.get('TagID',GUID.new_uuid())
         super(Tag,self).__init__(**kwargs)
 
     def __repr__(self):
