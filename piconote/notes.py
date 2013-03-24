@@ -9,7 +9,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 from datetime import datetime
 
-from mininote.dbtypes import GUID
+from piconote.dbtypes import GUID
 
 # create a configured "Session" class
 
