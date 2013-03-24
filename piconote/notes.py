@@ -10,13 +10,15 @@ from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 
 from piconote.dbtypes import GUID
-
+from piconote.connection import get_engine
 # create a configured "Session" class
 
 Base = declarative_base()
 
 Now = lambda : datetime.now()
 
+engine = get_engine()
+Session = sessionmaker(bind=engine)
             
 class Note(Base):
     
@@ -34,6 +36,8 @@ class Note(Base):
 
     Creator = relationship('User', foreign_keys = [CreatorID])
     Modifier = relationship('User', foreign_keys = [ModifierID])
+    
+    Tags = relationship('Tag', secondary = lambda : TagLink.__table__)
     #def __init__(self, text = None, note_id = None, when = None, user = None):
     def __init__(self, **kwargs):
         
@@ -42,6 +46,13 @@ class Note(Base):
         self.ModifyDate = kwargs.get('ModifyDate',Now())
         super(Note,self).__init__(**kwargs)
     
+    
+    def __str__(self):
+        
+        return "-"*80 + "\n[Author:{c}][Created:{d}]\nTags:{tags}\n{t}".format(c=self.Creator,
+                                      d = self.CreateDate,
+                                      tags = ",".join([t.TagName for t in self.Tags]),
+                                      t = self.Text)
     #def __repr__(self):
     #    return "Note(Text={0},NoteID={1},When={2},User={3})".format(repr(self.Text), 
     #                                                                  repr(self.NoteID), 
@@ -101,7 +112,7 @@ class Tag(Base):
     
 
     
-def CreateNote(text,tags, session = None):
+def create_note(text,tags, session = None):
     """
     Creates a Note associated with the given tags
     
@@ -117,7 +128,6 @@ def CreateNote(text,tags, session = None):
     Example:
         >>> CreateNote('What is the air speed of a fully laden swallow?',['birds','monty python'])
     """
-    global Session
 #    
 #    docommit = False    
     if session is None:
@@ -146,28 +156,46 @@ def CreateNote(text,tags, session = None):
     #if docommit:    
     session.commit()
 
-def FindNotesByTag(tag):
-
+def find_by_tag(tag_name):
+    
     session = Session()
         
-    mynotes = session.query(Note).join(TagLink, Note.NoteID == TagLink.NoteID).\
-        join(Tag, TagLink.TagID == Tag.TagID).filter(Tag.TagName == tag).all()
+    #mynotes = session.query(Note).join(TagLink, Note.NoteID == TagLink.NoteID).\
+    #    join(Tag, TagLink.TagID == Tag.TagID).filter(Tag.TagName == tag).all()
+
+    tag = session.query(Tag).filter(Tag.TagName == tag_name).first()
     
+    return tag.Notes
+
+
+def get_tags():
+    
+    session = Session()
+    
+    tags = session.query(Tag).all()
+    
+    tagnames = [t.TagName for t in tags]
+    
+    return tagnames
+
+def find_text_in_note(text):
+    
+    session = Session()
+    mynotes = session.query(Note).filter(Note.Text.contains(text)).all()
     return mynotes
-
-
-def CreateDatabase(deleteFirstIfExists = False):
-    """
-    Creates the database to store the notes in.  Optionally delete an old one
-    if it already exissts
-    """
-    from connection import CreateEngine, CreateDatabase, DropDatabase, dbtype, connection_string
-
-    engine = CreateEngine(connection_string, False)
-    if deleteFirstIfExists: DropDatabase(dbtype, engine)
-    CreateDatabase(dbtype, engine)
-
-    return engine
+    
+#def create_database(deleteFirstIfExists = False):
+#    """
+#    Creates the database to store the notes in.  Optionally delete an old one
+#    if it already exissts
+#    """
+#    from connection import CreateEngine, CreateDatabase, DropDatabase, dbtype, connection_string
+#
+#    engine = CreateEngine(connection_string, False)
+#    if deleteFirstIfExists: DropDatabase(dbtype, engine)
+#    CreateDatabase(dbtype, engine)
+#
+#    return engine
 
             
 
@@ -175,45 +203,4 @@ def CreateDatabase(deleteFirstIfExists = False):
 
     
 if __name__ == '__main__':
-    from pprint import pprint
-    from mininote.connection import CreateDatabase, DropDatabase, connection_string
-    
-    DropDatabase(connection_string,False)
-    engine = CreateDatabase(connection_string, False)
-    #Base.metadata.bind = engine
-    Session = sessionmaker(bind=engine)
-    print('Creating tables')
-    Base.metadata.create_all(engine)
-    print('done')
-
-    s = Session()    
-    
-    #if s.query(User).filter_by(UserName = 'Bradley').first() is None:
-    u1 = User(UserName = 'Superman')
-    u2 = User(UserName = 'Batman')
-    s.add(u1)
-    s.add(u2)
-    s.commit()
-        
-    CreateNote('Penguins are slow!!!!',['people','villain','animal'])
-    CreateNote('Jokers are not funny',['people','villain','comedian'])    
-    CreateNote("Is Robin OK?\nI haven't seen him in a while.",['people','sidekick'])
-    CreateNote("Lex Luther....",["people","villain"])
-    #note = Note(Text = 'Something cool happened')
-    #note.User = me
-    
-    s = Session()
-    notes = s.query(Note).all()
-    for n in notes:
-        print(repr(n))
-#    
-    print('\nAnimal Notes\n------------')
-    pprint(FindNotesByTag('animal'))
-
-    print('\nTags\n------------')
-    mytags = s.query(Tag).all()
-    pprint(mytags)
-
-    print('\nUsers\n------------')
-    pprint(s.query(User).all())
-    u=s.query(User).first()
+    pass

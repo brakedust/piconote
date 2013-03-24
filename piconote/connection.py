@@ -19,14 +19,9 @@ elif dbtype == 'mysql':
 
 
 
-def CreateEngine(url, echo = False):
-    """
-    Creates a database engine
-    """
-    return create_engine(url, echo = echo)
 
 
-def DropDatabase(url, echo = False):
+def drop_database(url, echo = False):
     """
     engine is required if dbtype is not sqlite
     """
@@ -41,7 +36,7 @@ def DropDatabase(url, echo = False):
         print('Dropping mysql piconote db')
         try:
             server_string = url.rpartition('/')[0] #pulls the database name off the end of the string
-            engine = CreateEngine(server_string, echo = False)
+            engine = create_engine(server_string, echo = False)
             conn = engine.connect()
             conn.execute("drop database if exists piconote")
             conn.execute("commit")
@@ -51,25 +46,29 @@ def DropDatabase(url, echo = False):
             pass
 
 
-def CreateDatabase(url, echo = False):
+def create_database(url = connection_string, echo = False):
     """
     engine is required if dbtype is not sqlite
     """
     print('Creating database')
     if not url.lower().startswith('sqlite'): 
         server_string = url.rpartition('/')[0]
-        engine = CreateEngine(server_string, echo=echo)
+        engine = create_engine(server_string, echo=echo)
         conn = engine.connect()
         conn.execute("create database if not exists piconote")
         conn.execute("use piconote")
         conn.execute("commit")
         conn.close()
 
-    engine = CreateEngine(url, echo=echo)
+    engine = create_engine(url, echo=echo)
     return engine
+
+
+def get_engine(echo = False):
+    return create_engine(connection_string, echo=echo)
     
 if __name__ == "__main__":
-
-    DropDatabase(connection_string, echo_sql)
-    engine = CreateDatabase(connection_string, echo_sql)
+    echo_sql = False
+    drop_database(connection_string, echo_sql)
+    engine = create_database(connection_string, echo_sql)
 
