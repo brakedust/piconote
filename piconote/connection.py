@@ -46,7 +46,7 @@ def drop_database(url, echo = False):
             pass
 
 
-def create_database(url = connection_string, echo = False):
+def create_database(url, echo = False):
     """
     engine is required if dbtype is not sqlite
     """

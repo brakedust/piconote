@@ -2,7 +2,7 @@
 import sys
 from argparse import ArgumentParser
 
-from piconote.connection import create_database
+from piconote.connection import create_database, drop_database, connection_string
 from piconote.notes import (Base, create_note, find_text_in_note,
     find_by_tag, get_tags)
 
@@ -31,10 +31,16 @@ def run(inargs):
     #print(args)
     if args.create_database:
         print('Creating database')        
-        engine = create_database()
+        engine = create_database(connection_string)
         Base.metadata.create_all(engine)
     
-
+    if args.delete_database:        
+        answer = input("Do you want to delete the database (y/n)? ")
+        if answer.lower() in ('y','yes','1'):
+            answer = input("Do you REALLY want to delete the database (y/n)? ")
+            if answer.lower() in ('y','yes','1'):
+                print('Deleting database')            
+                drop_database(connection_string)
     if args.new:
         if args.text is None:
             print('You must use the -text option when creating a new note')
