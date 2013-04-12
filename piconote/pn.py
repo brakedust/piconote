@@ -6,6 +6,10 @@ from piconote.connection import create_database, drop_database, connection_strin
 from piconote.notes import (Base, create_note, find_text_in_note,
     find_by_tag, get_tags)
 
+import getpass
+
+username = getpass.getuser()
+        
 def run(inargs):
     
     parser = ArgumentParser(prog = 'piconote', prefix_chars = '-/', 
