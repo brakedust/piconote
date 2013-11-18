@@ -1,0 +1,1 @@
+pylint ../piconote/notes.py
