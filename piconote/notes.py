@@ -4,7 +4,7 @@ import sys, os
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..'))
 from sqlalchemy import (Integer, String, CHAR, Float, Column, ForeignKey, 
                         create_engine, DateTime, text)
-from sqlalchemy.orm import  relationship, sessionmaker
+from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 from datetime import datetime
